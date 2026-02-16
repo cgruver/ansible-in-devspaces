@@ -1,0 +1,29 @@
+schemaVersion: 2.2.0
+attributes:
+  controller.devfile.io/storage-type: per-workspace
+metadata:
+  name: ansible-in-devspaces
+projects:
+  - name: ansible-in-devspaces
+    git:
+      remotes:
+        origin: https://github.com/cgruver/ansible-in-devspaces.git
+      checkoutFrom:
+        remote: origin
+        revision: main
+components:
+- name: dev-tools
+  container: 
+    image: quay.io/cgruver0/che/ocp-4-20-userns:latest
+    memoryLimit: 8Gi
+    cpuLimit: "2"
+    env:
+    - name: HOME
+      value: "/projects/home"
+    - name: VSCODE_DEFAULT_WORKSPACE
+      value: "/projects/ansible-in-devspaces/vscode.code-workspace"
+    endpoints:
+    - exposure: public
+      name: podman
+      protocol: https
+      targetPort: 8080
