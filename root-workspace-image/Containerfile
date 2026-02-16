@@ -15,12 +15,8 @@ RUN microdnf --disableplugin=subscription-manager install -y procps-ng openssl g
     #
     # Setup for root-less podman
     #
-    # mkdir -p ${HOME} ; \
-    # chown -R 1000:1000 ${HOME} ; \
-    groupadd --gid 1000 user ; \
-    useradd --home-dir ${HOME} --gid 1000 --uid 1000 --groups root --shell /bin/bash user ; \
-    # echo "user:x:1000:1000:devspaces user:${HOME}:/bin/bash" >> /etc/passwd ; \
-    # echo "user:x:1000:" >> /etc/group ; \
+    echo "user:x:1000:1000:devspaces user:${HOME}:/bin/bash" >> /etc/passwd ; \
+    echo "user:x:1000:" >> /etc/group ; \
     echo "user:1001:64535" >> /etc/subuid ; \
     echo "user:1001:64535" >> /etc/subgid ; \
     usermod --append --groups root user ; \
