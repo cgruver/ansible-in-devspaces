@@ -21,6 +21,8 @@ components:
           io.kubernetes.cri-o.cgroup2-mount-hierarchy-rw: 'true'
       spec:
         hostUsers: false
+        securityContext:
+          runAsUser: 1000
     container-overrides: 
       securityContext:
         capabilities:
