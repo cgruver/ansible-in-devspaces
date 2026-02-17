@@ -24,7 +24,6 @@ components:
         securityContext:
           runAsUser: 1000
           fsGroup: 0
-          runAsNonRoot: false
     container-overrides: 
       securityContext:
         capabilities:
@@ -36,6 +35,8 @@ components:
           drop:
             - ALL
         runAsUser: 0
+        runAsNonRoot: false
+        fsGroup: 0
         procMount: Unmasked
   container: 
     image: quay.io/cgruver0/che/ocp-4-20-userns:latest
