@@ -2,12 +2,12 @@ schemaVersion: 2.2.0
 attributes:
   controller.devfile.io/storage-type: per-workspace
 metadata:
-  name: ansible-in-devspaces
+  name: systemd-in-devspaces
 projects:
-  - name: ansible-in-devspaces
+  - name: systemd-in-devspaces
     git:
       remotes:
-        origin: https://github.com/cgruver/ansible-in-devspaces.git
+        origin: https://github.com/cgruver/systemd-in-devspaces.git
       checkoutFrom:
         remote: origin
         revision: main
@@ -21,7 +21,7 @@ components:
     - name: HOME
       value: "/projects/home"
     - name: VSCODE_DEFAULT_WORKSPACE
-      value: "/projects/ansible-in-devspaces/vscode.code-workspace"
+      value: "/projects/systemd-in-devspaces/vscode.code-workspace"
     endpoints:
     - exposure: public
       name: podman

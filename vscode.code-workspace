@@ -1,8 +1,8 @@
 {
 	"folders": [
 		{
-			"name": "ansible-in-devspaces",
-			"path": "/projects/ansible-in-devspaces"
+			"name": "systemd-in-devspaces",
+			"path": "/projects/systemd-in-devspaces"
 		}
 	],
 	"extensions": {
