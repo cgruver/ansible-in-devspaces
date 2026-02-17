@@ -7,7 +7,7 @@ USER 0
 
 COPY --chown=0:0 entrypoint.sh /
 
-RUN microdnf --disableplugin=subscription-manager install -y procps-ng openssl git tar shadow-utils bash zsh podman buildah skopeo python3-pip python3-devel aardvark-dns fuse-overlayfs util-linux vim-minimal vim-enhanced; \
+RUN microdnf --disableplugin=subscription-manager install -y procps-ng openssl git tar shadow-utils bash zsh podman buildah skopeo python3-pip python3-devel aardvark-dns fuse-overlayfs util-linux vim-minimal vim-enhanced strace; \
     microdnf update -y ; \
     microdnf clean all ; \
     pip3 install podman-compose ; \
@@ -19,6 +19,8 @@ RUN microdnf --disableplugin=subscription-manager install -y procps-ng openssl g
     echo "user:x:1000:" >> /etc/group ; \
     echo "user:1001:64535" >> /etc/subuid ; \
     echo "user:1001:64535" >> /etc/subgid ; \
+    echo "root:1:65535" >> /etc/subuid ; \
+    echo "root:1:65535" >> /etc/subgid ; \
     usermod --append --groups root user ; \
     setcap cap_setuid+ep /usr/bin/newuidmap ; \
     setcap cap_setgid+ep /usr/bin/newgidmap

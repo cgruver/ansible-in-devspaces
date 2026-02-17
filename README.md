@@ -10,6 +10,7 @@ allowedCapabilities:
 - SETUID
 - SETGID
 - CHOWN
+- SETFCAP
 fsGroup:
   type: RunAsAny
 runAsUser:
@@ -52,6 +53,7 @@ spec:
             - SETGID
             - SETUID
             - CHOWN
+            - SETFCAP
           drop:
             - ALL
         runAsUser: 0
