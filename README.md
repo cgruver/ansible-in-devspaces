@@ -32,7 +32,7 @@ cat << EOF | oc apply -f -
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: nested-podman-scc
+  name: nested-podman-run-as-root
 priority: null
 allowPrivilegeEscalation: true
 allowedCapabilities:
@@ -51,6 +51,28 @@ seLinuxContext:
 supplementalGroups:
   type: RunAsAny
 userNamespaceLevel: RequirePodLevel
+EOF
+```
+
+```bash
+cat << EOF | oc apply -f -
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dev-workspace-run-as-root
+  labels:
+    app.kubernetes.io/part-of: che.eclipse.org
+rules:
+  - verbs:
+      - get
+      - update
+      - use
+    apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    resourceNames:
+      - nested-podman-run-as-root
 EOF
 ```
 
@@ -99,9 +121,7 @@ spec:
     secondsOfRunBeforeIdling: -1
     maxNumberOfWorkspacesPerUser: -1
     maxNumberOfRunningWorkspacesPerUser: 5
-    containerBuildConfiguration:
-      openShiftSecurityContextConstraint: nested-podman-scc
-    disableContainerBuildCapabilities: false
+    disableContainerBuildCapabilities: true
     defaultComponents:
     - name: dev-tools
       container:
@@ -115,6 +135,9 @@ spec:
     secondsOfInactivityBeforeIdling: 1800
     storage:
       pvcStrategy: per-workspace
+    user:
+      clusterRoles:
+      - dev-workspace-run-as-root
   gitServices: {}
   networking: {}   
 EOF
@@ -133,6 +156,7 @@ config:
     podAnnotations:
       io.kubernetes.cri-o.Devices: "/dev/fuse,/dev/net/tun"
       io.kubernetes.cri-o.cgroup2-mount-hierarchy-rw: 'true'
+      openshift.io/scc: nested-podman-run-as-root
     containerSecurityContext:
       allowPrivilegeEscalation: true
       procMount: Unmasked
