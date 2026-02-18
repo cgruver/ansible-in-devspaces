@@ -11,4 +11,6 @@ then
   (echo '[storage]';echo 'driver = "overlay"';echo 'graphroot = "/tmp/graphroot"';echo '[storage.options.overlay]';echo 'mount_program = "/usr/bin/fuse-overlayfs"') > ${HOME}/.config/containers/storage.conf
 fi
 
+chown -R $(whoami) ${PROJECTS_ROOT}
+
 exec "$@"

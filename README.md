@@ -136,6 +136,9 @@ config:
     containerSecurityContext:
       allowPrivilegeEscalation: true
       procMount: Unmasked
+      runAsUser: 0
+      runAsNonRoot: false
+      fsGroup: 0
       capabilities:
         add:
         - SETGID
