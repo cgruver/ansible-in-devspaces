@@ -56,28 +56,6 @@ EOF
 
 ```bash
 cat << EOF | oc apply -f -
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: dev-workspace-run-as-root
-  labels:
-    app.kubernetes.io/part-of: che.eclipse.org
-rules:
-  - verbs:
-      - get
-      - update
-      - use
-    apiGroups:
-      - security.openshift.io
-    resources:
-      - securitycontextconstraints
-    resourceNames:
-      - nested-podman-run-as-root
-EOF
-```
-
-```bash
-cat << EOF | oc apply -f -
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -91,24 +69,6 @@ spec:
   sourceNamespace: openshift-marketplace 
 EOF
 ```
-
-```bash
-cat << EOF | oc apply -f -
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: dev-workspace-run-as-root
-  labels:
-    app.kubernetes.io/part-of: che.eclipse.org
-subjects:
-  - kind: ServiceAccount
-    name: devspaces-operator
-    namespace: openshift-operators
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: dev-workspace-run-as-root
-EOF
 
 ```bash
 cat << EOF | oc apply -f -
@@ -127,8 +87,6 @@ spec:
     cheServer:      
       debug: false
       logLevel: INFO
-      clusterRoles:
-      - dev-workspace-run-as-root
     metrics:                
       enable: true
     pluginRegistry:
@@ -142,6 +100,11 @@ spec:
     maxNumberOfWorkspacesPerUser: -1
     maxNumberOfRunningWorkspacesPerUser: 5
     disableContainerRunCapabilities: false
+    security:
+      podSecurityContext:
+        fsGroup: 0
+        runAsNonRoot: false
+        runAsUser: 0
     containerRunConfiguration:
       openShiftSecurityContextConstraint: nested-podman-run-as-root
       containerSecurityContext:
@@ -172,9 +135,6 @@ spec:
     secondsOfInactivityBeforeIdling: 1800
     storage:
       pvcStrategy: per-workspace
-    user:
-      clusterRoles:
-      - dev-workspace-run-as-root
   gitServices: {}
   networking: {}   
 EOF
@@ -190,10 +150,11 @@ metadata:
 config:
   workspace:
     hostUsers: false
+    podSecurityContext:
+      fsGroup: 0
     podAnnotations:
       io.kubernetes.cri-o.Devices: "/dev/fuse,/dev/net/tun"
       io.kubernetes.cri-o.cgroup2-mount-hierarchy-rw: 'true'
-      openshift.io/scc: nested-podman-run-as-root
     containerSecurityContext:
       allowPrivilegeEscalation: true
       procMount: Unmasked
