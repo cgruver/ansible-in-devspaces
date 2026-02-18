@@ -13,19 +13,8 @@ projects:
         revision: main
 components:
 - name: dev-tools
-  # attributes:
-  #   container-overrides: 
-  #     securityContext:
-  #       capabilities:
-  #         add:
-  #           - SETGID
-  #           - SETUID
-  #           - CHOWN
-  #           - SETFCAP
-  #         drop:
-  #           - ALL
   container: 
-    image: nexus.clg.lab:5002/dev-spaces/systemd-test:latest
+    image: quay.io/cgruver0/che/devspaces-run-as-root:latest
     memoryLimit: 8Gi
     cpuLimit: "2"
     env:
