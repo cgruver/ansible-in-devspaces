@@ -1,6 +1,13 @@
+# Experimental project for enabling systemd containers in OpenShift Dev Spaces
+
+## Apply the following MachineConfig to enable RW cgroups
 
 ```bash
-MACHINE_TYPE=master
+# For Control-Plane nodes -
+# MACHINE_TYPE=master
+
+# For Compute Nodes -
+# MACHINE_TYPE=worker
 
 cat << EOF | butane | oc apply -f -
 variant: openshift
@@ -26,6 +33,8 @@ storage:
         ]
 EOF
 ```
+
+## Create an SCC to allow workspaces to run as root mapped to a user namespace
 
 ```bash
 cat << EOF | oc apply -f -
@@ -54,6 +63,8 @@ userNamespaceLevel: RequirePodLevel
 EOF
 ```
 
+## Install OpenShift Dev Spaces
+
 ```bash
 cat << EOF | oc apply -f -
 apiVersion: operators.coreos.com/v1alpha1
@@ -69,6 +80,8 @@ spec:
   sourceNamespace: openshift-marketplace 
 EOF
 ```
+
+Create the Dev Spaces cluster
 
 ```bash
 cat << EOF | oc apply -f -
@@ -140,33 +153,12 @@ spec:
 EOF
 ```
 
+## Create a workspace from this repo
+
+## Run a container with systemd
+
 ```bash
-cat << EOF | oc apply -f -
-apiVersion: controller.devfile.io/v1alpha1
-kind: DevWorkspaceOperatorConfig
-metadata:
-  name: devworkspace-operator-config
-  namespace: openshift-operators
-config:
-  workspace:
-    hostUsers: false
-    podSecurityContext:
-      fsGroup: 0
-    podAnnotations:
-      io.kubernetes.cri-o.Devices: "/dev/fuse,/dev/net/tun"
-      io.kubernetes.cri-o.cgroup2-mount-hierarchy-rw: 'true'
-    containerSecurityContext:
-      allowPrivilegeEscalation: true
-      procMount: Unmasked
-      runAsUser: 0
-      runAsNonRoot: false
-      fsGroup: 0
-      capabilities:
-        add:
-        - SETGID
-        - SETUID
-        - CHOWN
-        - SETFCAP
-EOF
+podman --cgroup-manager cgroupfs run -it --rm --systemd=true --cgroup-parent=/containers --name=systemd registry.access.redhat.com/ubi10-init:10.1
 ```
+
 
