@@ -141,7 +141,24 @@ spec:
     secondsOfRunBeforeIdling: -1
     maxNumberOfWorkspacesPerUser: -1
     maxNumberOfRunningWorkspacesPerUser: 5
-    disableContainerBuildCapabilities: true
+    disableContainerRunCapabilities: false
+    containerRunConfiguration:
+      openShiftSecurityContextConstraint: nested-podman-run-as-root
+      containerSecurityContext:
+        allowPrivilegeEscalation: true
+        procMount: Unmasked
+        runAsUser: 0
+        runAsNonRoot: false
+        fsGroup: 0
+        capabilities:
+          add:
+          - SETGID
+          - SETUID
+          - CHOWN
+          - SETFCAP
+      workspacesPodAnnotations:
+        io.kubernetes.cri-o.Devices: "/dev/fuse,/dev/net/tun"
+        io.kubernetes.cri-o.cgroup2-mount-hierarchy-rw: 'true'
     defaultComponents:
     - name: dev-tools
       container:
