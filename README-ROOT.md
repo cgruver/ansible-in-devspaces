@@ -43,30 +43,24 @@ cat << EOF | oc apply -f -
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: nested-podman-systemd
+  name: nested-podman-run-as-root
 priority: null
 allowPrivilegeEscalation: true
 allowedCapabilities:
 - SETUID
 - SETGID
 - CHOWN
+- SETFCAP
 fsGroup:
-  type: MustRunAs
-  ranges:
-  - min: 1000
-    max: 65534
+  type: RunAsAny
 runAsUser:
-  type: MustRunAs
-  uid: 1000
+  type: RunAsAny
 seLinuxContext:
   type: MustRunAs
   seLinuxOptions:
     type: container_engine_t
 supplementalGroups:
-  type: MustRunAs
-  ranges:
-  - min: 1000
-    max: 65534
+  type: RunAsAny
 userNamespaceLevel: RequirePodLevel
 EOF
 ```
@@ -122,17 +116,24 @@ spec:
     maxNumberOfRunningWorkspacesPerUser: 5
     disableContainerRunCapabilities: false
     security:
+      podSecurityContext:
+        fsGroup: 0
+        runAsNonRoot: false
+        runAsUser: 0
     containerRunConfiguration:
-      openShiftSecurityContextConstraint: nested-podman-systemd
+      openShiftSecurityContextConstraint: nested-podman-run-as-root
       containerSecurityContext:
         allowPrivilegeEscalation: true
         procMount: Unmasked
-        runAsUser: 1000
+        runAsUser: 0
+        runAsNonRoot: false
+        fsGroup: 0
         capabilities:
           add:
           - SETGID
           - SETUID
           - CHOWN
+          - SETFCAP
       workspacesPodAnnotations:
         io.kubernetes.cri-o.Devices: "/dev/fuse,/dev/net/tun"
         io.kubernetes.cri-o.cgroup2-mount-hierarchy-rw: 'true'
