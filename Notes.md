@@ -111,7 +111,7 @@ spec:
         requests:
           cpu: 100m
           memory: 256Mi
-      name: run-as-root
+      name: systemd
       securityContext:
         capabilities:
           add:
@@ -240,3 +240,83 @@ systemd:
     name: systemd-selinux-patch-audit-log.service
 EOF
 ```
+
+```bash
+cat << EOF | oc apply -f -
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: systemd-nested-podman
+priority: null
+allowPrivilegeEscalation: true
+allowedCapabilities:
+- SETUID
+- SETGID
+- CHOWN
+fsGroup:
+  type: MustRunAs
+  ranges:
+  - min: 1000
+    max: 65534
+runAsUser:
+  type: MustRunAs
+  uid: 1000
+seLinuxContext:
+  type: MustRunAs
+  seLinuxOptions:
+    type: container_engine_t
+supplementalGroups:
+  type: MustRunAs
+  ranges:
+  - min: 1000
+    max: 65534
+userNamespaceLevel: RequirePodLevel
+EOF
+```
+
+```bash
+cat << EOF | oc apply -f -
+kind: Pod
+apiVersion: v1
+metadata:
+  name: systemd
+  annotations:
+    io.kubernetes.cri-o.Devices: '/dev/fuse,/dev/net/tun'
+    openshift.io/scc: systemd-nested-podman
+    io.kubernetes.cri-o.cgroup2-mount-hierarchy-rw: 'true'
+spec:
+  hostUsers: false
+  restartPolicy: Always
+  containers:
+    - resources:
+        limits:
+          cpu: "1"
+          memory: 2Gi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      name: systemd
+      securityContext:
+        capabilities:
+          add:
+            - SETGID
+            - SETUID
+            - CHOWN
+          drop:
+            - ALL
+        runAsUser: 1000
+        readOnlyRootFilesystem: false
+        allowPrivilegeEscalation: true
+        procMount: Unmasked
+      imagePullPolicy: Always
+      image: 'nexus.clg.lab:5002/dev-spaces/systemd-test:sudo'
+      volumeMounts:
+        - name: home
+          mountPath: /home
+  volumes:
+    - name: home
+      emptyDir: {}
+EOF
+```
+
+podman --cgroup-manager cgroupfs run -it --rm --systemd=true --cgroup-parent=/outer --name=systemd registry.access.redhat.com/ubi10-init:10.1

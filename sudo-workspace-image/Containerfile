@@ -1,0 +1,35 @@
+FROM registry.access.redhat.com/ubi10-minimal
+
+ENV HOME=/home/user
+ENV BUILDAH_ISOLATION=chroot
+
+USER 0
+
+COPY --chown=0:0 entrypoint.sh /
+COPY --chown=0:0 set-cgroups.sh /
+
+RUN microdnf --disableplugin=subscription-manager install -y procps-ng openssl git tar shadow-utils bash zsh podman buildah skopeo python3-pip python3-devel aardvark-dns fuse-overlayfs util-linux vim-minimal vim-enhanced sudo ; \
+    microdnf update -y ; \
+    microdnf clean all ; \
+    pip3 install podman-compose ; \
+    chmod +x /entrypoint.sh ; \
+    chmod +x /set-cgroups.sh ; \
+    #
+    # Setup for root-less podman
+    #
+    echo "user:x:1000:1000:devspaces user:${HOME}:/bin/bash" >> /etc/passwd ; \
+    echo "user:x:1000:" >> /etc/group ; \
+    chmod 600 /etc/shadow ; \
+    echo "user:*:0:0:99999:7:::" >> /etc/shadow ; \
+    # groupadd -g 1000 user ; \
+    # useradd -g user -u 1000 -d ${HOME} -s /bin/bash user ; \
+    echo "user:1001:64535" >> /etc/subuid ; \
+    echo "user:1001:64535" >> /etc/subgid ; \
+    # usermod --append --groups root user ; \
+    setcap cap_setuid+ep /usr/bin/newuidmap ; \
+    setcap cap_setgid+ep /usr/bin/newgidmap ; \
+    echo "user ALL=NOPASSWD: /set-cgroups.sh" >> /etc/sudoers
+
+USER 1000
+ENTRYPOINT ["/usr/libexec/podman/catatonit","--","/entrypoint.sh"]
+CMD [ "tail", "-f", "/dev/null" ]
