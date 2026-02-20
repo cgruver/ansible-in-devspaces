@@ -36,7 +36,58 @@ storage:
 EOF
 ```
 
-## Create an SCC to allow workspaces to run as root mapped to a user namespace
+## Apply a Machine Config to patch an issue being fixed in OCP -
+
+```bash
+# For Control-Plane nodes -
+# MACHINE_TYPE=master
+
+# For Compute Nodes -
+# MACHINE_TYPE=worker
+
+cat << EOF | butane | oc apply -f -
+variant: openshift
+version: 4.20.0
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: ${MACHINE_TYPE}
+  name: selinux-patch-audit-log-${MACHINE_TYPE}
+storage:
+  files:
+  - path: /etc/selinux_patch_audit_log.te
+    mode: 0644
+    overwrite: true
+    contents:
+      inline: |
+        module selinux_patch_audit_log 1.0;
+        require {
+                type container_engine_t;
+                class netlink_audit_socket nlmsg_relay;
+        }
+        #============= container_engine_t ==============
+        allow container_engine_t self:netlink_audit_socket nlmsg_relay;
+systemd:
+  units:
+  - contents: |
+      [Unit]
+      Description=Modify SeLinux Type container_engine_t
+      DefaultDependencies=no
+      After=kubelet.service
+      
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      ExecStart=bash -c "/bin/checkmodule -M -m -o /tmp/selinux_patch_audit_log.mod /etc/selinux_patch_audit_log.te && /bin/semodule_package -o /tmp/selinux_patch_audit_log.pp -m /tmp/selinux_patch_audit_log.mod && /sbin/semodule -i /tmp/selinux_patch_audit_log.pp"
+      TimeoutSec=0
+      
+      [Install]
+      WantedBy=multi-user.target
+    enabled: true
+    name: systemd-selinux-patch-audit-log.service
+EOF
+```
+
+## Create an SCC to allow workspaces CAP_CHOWN
 
 ```bash
 cat << EOF | oc apply -f -
