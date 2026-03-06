@@ -2,6 +2,8 @@
 
 __Note:__ The manifests for creating the container image used in this workspace are located in the `root-workspace-image` directory.
 
+__Note:__ You need an OCP Cluster at version 4.20.15+
+
 ## Apply the following MachineConfig to enable RW cgroups
 
 ```bash
